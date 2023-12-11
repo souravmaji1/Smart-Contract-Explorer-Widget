@@ -1,6 +1,5 @@
 // widget.js
 
-
 class ContractExplorerWidget extends React.Component {
     constructor(props) {
         super(props);
@@ -15,7 +14,7 @@ class ContractExplorerWidget extends React.Component {
 
     fetchContractABI = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/contract-info/${this.state.contractAddress}`);
+            const response = await axios.get(`https://smartcontractx.onrender.com/contract-info/${this.state.contractAddress}`);
             this.setState({ contractABI: response.data.contractABI });
         } catch (error) {
             console.error('Error fetching contract ABI:', error);
@@ -44,7 +43,7 @@ class ContractExplorerWidget extends React.Component {
                 return;
             }
 
-            const response = await axios.post(`http://localhost:5000/test-contract/${this.state.contractAddress}`, {
+            const response = await axios.post(`https://smartcontractx.onrender.com/test-contract/${this.state.contractAddress}`, {
                 functionName: this.state.selectedFunction.name,
                 inputValues: this.state.functionInputs,
             });
@@ -56,6 +55,11 @@ class ContractExplorerWidget extends React.Component {
     };
 
     render() {
+        const { contractAddress, contractABI, selectedFunction, functionInputs, functionResult } = this.state;
+
+        const readFunctions = contractABI ? contractABI.filter((item) => item.stateMutability === 'view') : [];
+        const writeFunctions = contractABI ? contractABI.filter((item) => item.stateMutability !== 'view') : [];
+
         return (
             <div className="flex flex-col items-center justify-center px-20 mt-40 w-full z-[20]">
                 <div
@@ -69,16 +73,24 @@ class ContractExplorerWidget extends React.Component {
                         background: 'linear-gradient(45deg, #2a0e61, #010108)',
                     }}
                 >
-                    <h1 style={{ color: 'white' }}>Contract Explorer</h1>
+                    <h1 style={{ color: 'white', marginBottom: '1rem', textAlign: 'center', fontSize: '30px', fontWeight: '700', fontFamily: 'sans-serif' }}>Contract Explorer</h1>
                     <label style={{ color: 'white' }}>
                         Contract Address:
                         <input
-                            style={{ color: 'black' }}
+                            style={{
+                                color: 'black',
+                                padding: '8px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                marginBottom: '20px',
+                                width: '100%',
+                            }}
                             type="text"
-                            value={this.state.contractAddress}
+                            value={contractAddress}
                             onChange={(e) => this.setState({ contractAddress: e.target.value })}
                         />
                     </label>
+
                     <button
                         onClick={this.fetchContractABI}
                         style={{
@@ -88,112 +100,113 @@ class ContractExplorerWidget extends React.Component {
                             fontSize: '16px',
                             background: '#4109af',
                             cursor: 'pointer',
+                            border: 'none',
+                            display: 'flex',
+                            margin: 'auto',
+                            outline: 'none',
                         }}
                     >
-                        Fetch Contract ABI
+                        Fetch Contract
                     </button>
 
-                    {this.state.contractABI && (
+                    {contractABI && (
                         <div style={{ display: 'flex', marginTop: '1rem' }}>
-                            {/* Events Table */}
                             <div style={{ flex: 1, marginRight: '1rem' }}>
-                                <h2 style={{ color: 'white' }}>Events:</h2>
+                                <h2 style={{ color: 'white' }}>Read Functions:</h2>
                                 <table style={{ width: '100%', border: '1px solid white', color: 'white' }}>
                                     <thead>
                                         <tr>
                                             <th style={{ border: '1px solid white' }}>Name</th>
-                                            {/* Add more columns as needed */}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {this.state.contractABI
-                                            .filter((item) => item.type === 'event')
-                                            .map((event, index) => (
-                                                <tr key={index} style={{ border: '1px solid white' }}>
-                                                    <td
-                                                        onClick={() => this.handleFunctionSelect(event.name)}
-                                                        style={{ cursor: 'pointer', border: '1px solid white' }}
-                                                    >
-                                                        {event.name}
-                                                    </td>
-                                                    {/* Add more columns as needed */}
-                                                </tr>
-                                            ))}
+                                        {readFunctions.map((func, index) => (
+                                            <tr key={index} style={{ border: '1px solid white' }}>
+                                                <td
+                                                    onClick={() => this.handleFunctionSelect(func.name)}
+                                                    style={{ cursor: 'pointer', border: '1px solid white' }}
+                                                >
+                                                    {func.name}
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
 
-                            {/* Functions Table */}
                             <div style={{ flex: 1 }}>
-                                <h2 style={{ color: 'white' }}>Functions:</h2>
+                                <h2 style={{ color: 'white' }}>Write Functions:</h2>
                                 <table style={{ width: '100%', border: '1px solid white', color: 'white' }}>
                                     <thead>
                                         <tr>
                                             <th style={{ border: '1px solid white' }}>Name</th>
-                                            {/* Add more columns as needed */}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {this.state.contractABI
-                                            .filter((item) => item.type === 'function')
-                                            .map((func, index) => (
-                                                <tr key={index} style={{ border: '1px solid white' }}>
-                                                    <td
-                                                        onClick={() => this.handleFunctionSelect(func.name)}
-                                                        style={{ cursor: 'pointer', border: '1px solid white' }}
-                                                    >
-                                                        {func.name}
-                                                    </td>
-                                                    {/* Add more columns as needed */}
-                                                </tr>
-                                            ))}
+                                        {writeFunctions.map((func, index) => (
+                                            <tr key={index} style={{ border: '1px solid white' }}>
+                                                <td
+                                                    onClick={() => this.handleFunctionSelect(func.name)}
+                                                    style={{ cursor: 'pointer', border: '1px solid white' }}
+                                                >
+                                                    {func.name}
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     )}
 
-                    {this.state.selectedFunction && (
-                        <div>
-                            <h2 style={{ color: 'white' }}>Selected Function: {this.state.selectedFunction.name}</h2>
-                            {this.state.selectedFunction.inputs.map((input, index) => (
-                                <div key={index}>
-                                    <label style={{ color: 'white' }}>
+                    {selectedFunction && (
+                        <div style={{ marginTop: '20px', border: '1px solid #7042f88b', borderRadius: '8px', padding: '20px', background: '#151515' }}>
+                            <h2 style={{ color: '#ffffff', marginBottom: '15px' }}>Selected Function: {selectedFunction.name}</h2>
+
+                            {selectedFunction.inputs.map((input, index) => (
+                                <div key={index} style={{ marginBottom: '15px' }}>
+                                    <label style={{ color: '#ffffff', display: 'block', marginBottom: '5px' }}>
                                         {input.name} ({input.type}):
-                                        <input
-                                            type="text"
-                                            value={this.state.functionInputs[index]}
-                                            onChange={(e) => this.handleInputChange(index, e.target.value)}
-                                            style={{
-                                                width: '100%',
-                                                background: 'white',
-                                                border: '2px solid #ccc',
-                                                borderRadius: '4px',
-                                                padding: '8px',
-                                            }}
-                                        />
                                     </label>
+                                    <input
+                                        type="text"
+                                        value={functionInputs[index]}
+                                        onChange={(e) => this.handleInputChange(index, e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            background: '#282c34',
+                                            border: '2px solid #777',
+                                            color: '#ffffff',
+                                            borderRadius: '4px',
+                                            padding: '8px',
+                                            boxSizing: 'border-box',
+                                        }}
+                                    />
                                 </div>
                             ))}
 
                             <button
                                 onClick={this.handleTestFunction}
                                 style={{
-                                    color: 'white',
-                                    padding: '8px 16px',
+                                    color: '#ffffff',
+                                    padding: '10px 16px',
                                     borderRadius: '8px',
                                     fontSize: '16px',
                                     background: '#4109af',
                                     cursor: 'pointer',
+                                    border: 'none',
+                                    outline: 'none',
                                 }}
                             >
                                 Test Function
                             </button>
 
-                            {this.state.functionResult && (
-                                <div>
-                                    <h3 style={{ color: 'white' }}>Function Result:</h3>
-                                    <pre style={{ color: 'white' }}>{JSON.stringify(this.state.functionResult, null, 2)}</pre>
+                            {functionResult && (
+                                <div style={{ marginTop: '20px' }}>
+                                    <h3 style={{ color: '#ffffff', marginBottom: '10px' }}>Function Result:</h3>
+                                    <pre style={{ color: '#ffffff', background: '#282c34', padding: '15px', borderRadius: '8px', overflowX: 'auto' }}>
+                                        {JSON.stringify(functionResult, null, 2)}
+                                    </pre>
                                 </div>
                             )}
                         </div>
